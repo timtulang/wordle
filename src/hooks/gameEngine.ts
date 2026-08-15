@@ -2,18 +2,29 @@ import { useState, useEffect, useCallback } from 'react';
 import { type GameStatus, type GuessResult, MAX_GUESSES, WORD_LENGTH } from '../types/game';
 import { evaluateGuess } from '../utils/validation';
 
-export function useGameEngine(dailyAnswer: string, validWordList: string[]) {
-  const [guesses, setGuesses] = useState<GuessResult[]>([]);
-  const [currentGuess, setCurrentGuess] = useState('');
-  const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
+export function useGameEngine(dailyAnswer: string, validWordList: string[], puzzleId: string) {
+  // Initialize state from LocalStorage if it exists for TODAY'S puzzle
+  const [guesses, setGuesses] = useState<GuessResult[]>(() => {
+    const saved = localStorage.getItem(`puzzle_${puzzleId}`);
+    return saved ? JSON.parse(saved).guesses : [];
+  });
   
-  // ADDED: State for invalid word messages
+  const [gameStatus, setGameStatus] = useState<GameStatus>(() => {
+    const saved = localStorage.getItem(`puzzle_${puzzleId}`);
+    return saved ? JSON.parse(saved).gameStatus : 'playing';
+  });
+  
+  const [currentGuess, setCurrentGuess] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Save to LocalStorage every time guesses or gameStatus changes
+  useEffect(() => {
+    localStorage.setItem(`puzzle_${puzzleId}`, JSON.stringify({ guesses, gameStatus }));
+  }, [guesses, gameStatus, puzzleId]);
 
   const onKeyPress = useCallback((key: string) => {
     if (gameStatus !== 'playing') return;
 
-    // Clear error message when they start typing again
     if (errorMessage) setErrorMessage(null);
 
     if (key === 'Enter') {
@@ -22,7 +33,6 @@ export function useGameEngine(dailyAnswer: string, validWordList: string[]) {
         return;
       }
       
-      // ADDED: Dictionary Check!
       if (!validWordList.includes(currentGuess)) {
         showError("Not in word list");
         return;
@@ -46,7 +56,6 @@ export function useGameEngine(dailyAnswer: string, validWordList: string[]) {
     }
   }, [currentGuess, gameStatus, guesses, dailyAnswer, validWordList, errorMessage]);
 
-  // Helper function to flash the error for 2 seconds
   const showError = (msg: string) => {
     setErrorMessage(msg);
     setTimeout(() => setErrorMessage(null), 2000);
