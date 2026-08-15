@@ -8,12 +8,11 @@ interface KeyboardProps {
 
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['Enter', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Backspace'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Backspace'],
+  ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Enter'],
 ];
 
 export function Keyboard({ onKeyPress, guesses }: KeyboardProps) {
-  // Calculate the highest status for each letter to color the keys correctly
   const keyStatuses = useMemo(() => {
     const statuses: Record<string, LetterState> = {};
 
@@ -22,7 +21,6 @@ export function Keyboard({ onKeyPress, guesses }: KeyboardProps) {
         const currentStatus = statuses[letter];
         const newStatus = guess.statuses[i];
 
-        // Status hierarchy: correct > present > absent
         if (currentStatus === 'correct') return;
         if (currentStatus === 'present' && newStatus === 'absent') return;
         
@@ -39,6 +37,7 @@ export function Keyboard({ onKeyPress, guesses }: KeyboardProps) {
         <div key={rowIndex} className="flex justify-center gap-1.5 w-full">
           {row.map((key) => {
             const isActionKey = key === 'Enter' || key === 'Backspace';
+            const isEnter = key === 'Enter';
             const status = keyStatuses[key] || 'unused';
 
             return (
@@ -47,6 +46,7 @@ export function Keyboard({ onKeyPress, guesses }: KeyboardProps) {
                 value={key}
                 status={status as LetterState | 'unused'}
                 isActionKey={isActionKey}
+                isEnter={isEnter}
                 onClick={() => onKeyPress(key)}
               />
             );
@@ -63,23 +63,28 @@ interface KeyProps {
   value: string;
   status: LetterState | 'unused';
   isActionKey: boolean;
+  isEnter: boolean;
   onClick: () => void;
 }
 
-function Key({ value, status, isActionKey, onClick }: KeyProps) {
-  // Map our Phase 1 brutalist visual system to the keys
+function Key({ value, status, isActionKey, isEnter, onClick }: KeyProps) {
   const statusStyles = {
     unused: 'bg-[#E5E7EB] text-[#064E3B] border-transparent hover:bg-[#D1D5DB]',
-    absent: 'bg-[#57534E] text-white border-[#57534E]', // Muddy brown/gray
+    absent: 'bg-[#57534E] text-white border-[#57534E]', 
     present: "border-[#EAB308] bg-[#EAB308] text-[#064E3B]",
-    correct: 'bg-[#4ADE80] text-[#064E3B] border-[#4ADE80]', // Grass green
+    correct: 'bg-[#4ADE80] text-[#064E3B] border-[#4ADE80]', 
     empty: '', 
     tbd: ''
   }[status];
 
-  // Make action keys wider and slightly distinct
   const widthClass = isActionKey ? 'w-16 text-xs sm:w-20 sm:text-sm' : 'w-9 sm:w-11 text-lg';
   const displayValue = value === 'Backspace' ? 'DEL' : value;
+
+  // Apply highlight strictly to Enter key
+  let appliedStyles = statusStyles;
+  if (isEnter) {
+    appliedStyles = 'bg-[#FB923C] text-[#064E3B] border-[#064E3B] hover:bg-[#F97316]'; 
+  }
 
   return (
     <button
@@ -89,7 +94,7 @@ function Key({ value, status, isActionKey, onClick }: KeyProps) {
         font-bold rounded-sm uppercase transition-colors duration-200
         border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.15)]
         active:translate-y-[2px] active:translate-x-[2px] active:shadow-none
-        ${statusStyles}
+        ${appliedStyles}
       `}
       aria-label={value === 'Backspace' ? 'Delete' : value}
     >
