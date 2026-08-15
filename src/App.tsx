@@ -11,6 +11,7 @@ import { EndGameModal } from './components/EndGameModal';
 import { Leaderboard } from './components/Leaderboard';
 import { VALID_WORDS } from './data/validWords';
 import { submitGameAttempt, getTodayPuzzle, getUnlockedFragments } from './services/gameService';
+import { InstructionModal } from './components/InstructionModal';
 
 // ----------------------------------------------------------------------
 // 1. MAIN APP COMPONENT (Handles Authentication)
@@ -115,6 +116,11 @@ function LiveGameWrapper({  }: { session: Session }) {
 // ----------------------------------------------------------------------
 function ActiveGame({ puzzle, unlockedFragments }: { puzzle: any, unlockedFragments: string[] }) {
   const [activeView, setActiveView] = useState<'game' | 'leaderboard'>('game');
+
+  // Initialize state by checking if they previously checked the box
+  const [showInstructions, setShowInstructions] = useState(() => {
+    return localStorage.getItem('hideInstructions') !== 'true';
+  });
   
   const { guesses, currentGuess, gameStatus, errorMessage, onKeyPress } = useGameEngine(
     puzzle.answer,
@@ -198,6 +204,9 @@ function ActiveGame({ puzzle, unlockedFragments }: { puzzle: any, unlockedFragme
               <EndGameModal status={gameStatus} guesses={guesses} puzzleDate={puzzle.puzzle_date} />
             )}
           </footer>
+          {showInstructions && (
+            <InstructionModal onClose={() => setShowInstructions(false)} />
+          )}
         </>
       ) : (
         <main className="flex-1 w-full flex flex-col items-center z-10 relative">
