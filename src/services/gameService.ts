@@ -29,7 +29,7 @@ export async function getLiveLeaderboard() {
       profiles ( display_name )
     `)
     .order('total_score', { ascending: false })
-    .limit(50);
+    .limit(1000);
 
   if (error) {
     console.error('Failed to fetch leaderboard:', error);
