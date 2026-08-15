@@ -118,7 +118,8 @@ function ActiveGame({ puzzle, unlockedFragments }: { puzzle: any, unlockedFragme
   
   const { guesses, currentGuess, gameStatus, errorMessage, onKeyPress } = useGameEngine(
     puzzle.answer,
-    VALID_WORDS 
+    VALID_WORDS, 
+    puzzle.id
   );
 
   const BYPASS_DB_SAVE = false;
